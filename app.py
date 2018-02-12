@@ -9,6 +9,14 @@ from helpers import helpers
 
 
 def get_main_figure(df, crypto, rate):
+    """ Generates the main graph based on user inputs
+
+    :param df:      pd.DataFrame
+    :param crypto:  string
+    :param rate:    string
+    :return:
+    dict
+    """
     data = []
     annotations = []
 
@@ -31,6 +39,20 @@ def get_main_figure(df, crypto, rate):
         data.append(graph_data_year)
         annotations.append(graph_annotations_year)
 
+    # Red dashed line of 1x
+    data.append(dict(
+        type='scatter',
+        mode='lines',
+        name='1.0x',
+        x=[1, 55],
+        y=[1, 1],
+        line=dict(
+            color='red',
+            width=1,
+            dash='dot'
+        )
+    ))
+
     layout = helpers.format_graph_layout(crypto, min(df[colpct]), max(df[colpct]))
     layout['annotations'] = annotations
 
@@ -38,7 +60,7 @@ def get_main_figure(df, crypto, rate):
 
 
 app = dash.Dash()
-
+app.title = 'Yearly crypto price changes'
 
 app.layout = html.Div([
     html.Div([
@@ -73,8 +95,13 @@ app.layout = html.Div([
             ],
             value='Open'
         ),
-        html.A([html.Img(src='https://cdn.pixabay.com/photo/2013/04/06/11/50/image-editing-101040_960_720.jpg')],
-               href='http://google.com')
+        html.P(),
+        html.A([html.Img(src='https://assets-cdn.github.com/images/modules/logos_page/GitHub-Mark.png', width='50px',
+                         height='50px')],
+               href='https://github.com/fathomson/CryptoPriceChanges', target='_blank'),
+        html.A([html.Img(src='https://content.linkedin.com/content/dam/engineering/en-us/blog/migrated/linkedin.png',
+                         width='50px', height='50px')],
+               href='https://nl.linkedin.com/in/fathomson', target='_blank')
     ], className='col s3 grey lighten-4', style={'height': '100%'}),
     html.Div([
         dcc.Graph(id='graph-historical')
@@ -96,7 +123,7 @@ def update_graph(crypto, start, end, rate):
 
 
 external_css = ["https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css",
-                "https://codepen.io/chriddyp/pen/brPBPO.css"]  # https://community.plot.ly/t/mega-dash-loading-states/5687 thanks Chris
+                "https://codepen.io/chriddyp/pen/brPBPO.css"]
 for css in external_css:
     app.css.append_css({"external_url": css})
 
@@ -105,4 +132,4 @@ for script in external_scripts:
     app.scripts.append_script({"external_url": script})
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0')
+    app.run_server(debug=True)  # , host='0.0.0.0'

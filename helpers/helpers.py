@@ -78,15 +78,32 @@ def calculate_pct_change(df, crypto, rate):
 
 
 def format_as_x(arr):
+    """ Format floats as multiplication factor
+
+    :param arr: float array
+    :return:    string array
+    """
     return ['{:.1f}x'.format(x) for x in arr]
 
 
 def format_yearly_graph_data(data_year, line_color, line_width, rate, colpct):
+    """ Transform the yearly data to plotly ready format
+
+    :param data_year:   dataframe
+    :param line_color:  string
+    :param line_width:  float
+    :param rate:        string
+    :param colpct:      string
+    :return:
+    data dict plotly
+    annotation dict plotly
+    """
+
     dates_year = data_year.groupby("week", as_index=False).min()
 
     tick_text = []
-    for multiply, price in zip(format_as_x(dates_year[colpct]), dates_year[rate]):
-        tick_text.append('{} - ${}'.format(multiply, price))
+    for multiple, price in zip(format_as_x(dates_year[colpct]), dates_year[rate]):
+        tick_text.append('{} - ${}'.format(multiple, price))
 
     data = dict(
         type='scatter',
@@ -105,9 +122,9 @@ def format_yearly_graph_data(data_year, line_color, line_width, rate, colpct):
     )
 
     annotation = dict(
-        x=max(data_year['week']) + 1,
-        y=np.log10(data_year[colpct][len(dates_year) - 1]),
-        text=data_year["year"][0],
+        x=max(dates_year['week']) + 1,
+        y=np.log10(dates_year[colpct][len(dates_year) - 1]),
+        text=dates_year["year"][0],
         font=dict(
             family='Arial',
             size=16,
@@ -118,11 +135,19 @@ def format_yearly_graph_data(data_year, line_color, line_width, rate, colpct):
 
 
 def format_graph_layout(crypto, minpct, maxpct):
+    """ Format graph layout
+
+    :param crypto: string
+    :param minpct: float
+    :param maxpct: float
+    :return:
+    layout dict plotly
+    """
     x_tick_vals, x_tick_text = get_x_ticks()
     y_tick_vals, y_tick_text = get_y_ticks(minpct, maxpct)
 
     layout = dict(
-        title='{}\'s yearly price changes '.format(crypto),
+        title='{}\'s yearly price changes '.format(crypto.title()),
         autosize=True,
         height=600,
         xaxis=dict(
