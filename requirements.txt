@@ -1,0 +1,15 @@
+dash
+dash-renderer
+dash-html-components
+dash-core-components
+
+pandas
+numpy
+requests
+colorlover
+lxml
+html5lib
+BeautifulSoup4
+
+plotly
+gunicorn
