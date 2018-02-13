@@ -6,6 +6,7 @@ from datetime import datetime as dt
 from dateutil import parser
 from parsers import parser_cmc
 from helpers import helpers
+import numpy as np
 
 
 def get_main_figure(df, crypto, rate):
@@ -51,6 +52,16 @@ def get_main_figure(df, crypto, rate):
             width=1,
             dash='dot'
         )
+    ))
+
+    data.append(dict(
+        type='scatter',
+        mode='text',
+        name='1.0x',
+        x=[1],
+        y=[np.log10(min(df[colpct]) + 1)],
+        text=['https://github.com/fathomson/CryptoPriceChanges'],
+        textposition='right'
     ))
 
     layout = helpers.format_graph_layout(crypto, min(df[colpct]), max(df[colpct]))
@@ -132,4 +143,4 @@ for script in external_scripts:
     app.scripts.append_script({"external_url": script})
 
 if __name__ == '__main__':
-    app.run_server(debug=True)  # , host='0.0.0.0'
+    app.run_server(debug=True, host='0.0.0.0')  # host='0.0.0.0'
