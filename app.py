@@ -8,6 +8,30 @@ from parsers import parser_cmc
 from helpers import helpers
 import numpy as np
 
+import threading
+import time
+
+
+# schedule daily job in seperate thread to get most recent data
+
+def download_data():
+    print('Start downloading new data task')
+    start_time = time.time()
+    parser_cmc.get_and_save_markets_data()
+    parser_cmc.get_and_save_crypto_price_data()
+    print('Total downloading took: {:0.2f} seconds'.format(time.time() - start_time))
+
+
+def check_pending_download_task():
+    while True:
+        download_data()
+        time.sleep(24 * 60 * 60)  # download data every day
+
+
+t1 = threading.Thread(target=check_pending_download_task)
+t1.daemon = True
+t1.start()
+
 
 def get_main_figure(df, crypto, rate):
     """ Generates the main graph based on user inputs
@@ -73,6 +97,9 @@ def get_main_figure(df, crypto, rate):
 app = dash.Dash()
 app.title = 'Yearly crypto price changes'
 
+# TODO - Handle when None.
+markets_list = helpers.get_markets_file()
+
 app.layout = html.Div([
     html.Div([
         html.H4("Crypto price changes over time - how does the price evolve in a given year?")
@@ -81,7 +108,7 @@ app.layout = html.Div([
         html.H5('Select a crypto:'),
         dcc.Dropdown(
             id='dropdown-crypto',
-            options=parser_cmc.get_markets(),
+            options=markets_list,
             value='bitcoin'
         ),
         html.H5('Choose period:'),
@@ -129,8 +156,8 @@ app.layout = html.Div([
 def update_graph(crypto, start, end, rate):
     start = parser.parse(start).strftime("%Y%m%d")
     end = parser.parse(end).strftime("%Y%m%d")
-    pcmc = parser_cmc.Historical(crypto=crypto, start=start, end=end, rate=rate)
-    return get_main_figure(pcmc.get_cmc_historical_data(), crypto, rate)
+    data = helpers.get_cmc_historical_data(crypto, start, end, rate, False)
+    return get_main_figure(data, crypto, rate)
 
 
 external_css = ["https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css",

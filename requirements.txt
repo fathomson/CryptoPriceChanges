@@ -10,6 +10,8 @@ colorlover
 lxml
 html5lib
 BeautifulSoup4
+schedule
+
 
 plotly
 gunicorn

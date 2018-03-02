@@ -1,7 +1,11 @@
 import colorlover as cl
+import datetime as dt
 import calendar
+import os
 import pandas as pd
 import numpy as np
+from dateutil import parser
+from parsers import parser_cmc
 
 
 ###########
@@ -9,10 +13,9 @@ import numpy as np
 ###########
 
 def _get_month_abbriviations():
-    """ Returns a list of month names
+    """ Returns an array of month names, used to display on x of chart
 
-    :return:
-    months  : array
+    :return: months  : array
     """
     months = []
     for i in range(1, 13, 3):
@@ -23,6 +26,87 @@ def _get_month_abbriviations():
 ###########
 # Public #
 ###########
+
+def get_markets_file():
+    """ Returns a dataframe of available crypto's
+
+    :return: df : dataframe
+    """
+    filepath = os.path.join(parser_cmc.DATA_DIR, parser_cmc.MARKETS_FILE)
+
+    # When there is no markets.csv download it first.
+    if not os.path.isfile(filepath):
+        parser_cmc.get_and_save_markets_data()
+
+    # When file is not there return None,
+    markets_df = pd.read_csv(filepath)
+    if markets_df is None:
+        return None
+
+    df = markets_df.to_dict('records')
+    return df
+
+
+def get_historial_prices_data(crypto, start, end):
+    """ Return dataframe with crypto prices for selected period
+
+    :param crypto: string
+    :param start: date
+    :param end: date
+    :return:
+    """
+    filepath = os.path.join(parser_cmc.DATA_DIR, '{}.csv'.format(crypto))
+
+    # download file when not exist or when older than today
+    parser_cmc.prepare_crypto_parsing(crypto)
+
+    # return None when markets file not found
+    crypto_df = pd.read_csv(filepath)
+    if crypto_df is None:
+        return None
+
+    crypto_df['Date'] = [parser.parse(x) for x in crypto_df['Date']]
+    starttime = parser.parse(start)
+    endtime = parser.parse(end)
+    crypto_df = crypto_df[(crypto_df['Date'] >= starttime) & (crypto_df['Date'] <= endtime)]
+    return crypto_df
+
+
+def get_historial_prices_data_test(start, end, rate):
+    """ Get a dataframe with fake data, for testing purposes
+
+    :param start: datetime of startdate
+    :param end: datetime of endate
+    :param rate: name of rate column
+    :return:
+    df      : dataframe
+    """
+    date_range = {'Date': pd.date_range(start=start, end=end)}
+    df = pd.DataFrame(date_range)
+    df[rate] = np.random.randint(3, 20000, len(df))
+    return df
+
+
+def get_cmc_historical_data(crypto, start, end, rate, is_test_data):
+    """ Get a workable dataframe containing the crypto date, price and percentage change values.
+
+    :return:
+    cmc_prices      : dataframe
+    """
+    cmc_prices = get_historial_prices_data_test(start, end, rate) \
+        if is_test_data else \
+        get_historial_prices_data(crypto, start, end);
+    cmc_prices = add_day_week_year_to_df(cmc_prices)
+    cmc_prices = calculate_pct_change(cmc_prices, crypto, rate)
+    return cmc_prices
+
+
+def is_modified_today(file):
+    time_modified = int(os.path.getmtime(file))
+    today = dt.datetime.now()
+    today_start = int(dt.datetime(today.year, today.month, today.day, 0, 0, 0, 0).timestamp())
+    return time_modified > today_start
+
 
 def get_hex_colors(colors="Greys"):
     """ Creates an array of hex coded colors.
@@ -99,7 +183,7 @@ def format_yearly_graph_data(data_year, line_color, line_width, rate, colpct):
     annotation dict plotly
     """
 
-    dates_year = data_year.groupby("week", as_index=False).min()
+    dates_year = data_year.groupby("week", as_index=False).max()
 
     tick_text = []
     for multiple, price in zip(format_as_x(dates_year[colpct]), dates_year[rate]):
