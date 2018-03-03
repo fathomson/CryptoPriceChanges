@@ -96,7 +96,7 @@ def get_cmc_historical_data(crypto, start, end, rate, is_test_data):
     cmc_prices = get_historial_prices_data_test(start, end, rate) \
         if is_test_data else \
         get_historial_prices_data(crypto, start, end);
-    cmc_prices = add_day_week_year_to_df(cmc_prices)
+    cmc_prices = add_day_week_month_year_to_df(cmc_prices)
     cmc_prices = calculate_pct_change(cmc_prices, crypto, rate)
     return cmc_prices
 
@@ -133,7 +133,7 @@ def get_price_value_pct(price_value):
     return col_name
 
 
-def add_day_week_year_to_df(df):
+def add_day_week_month_year_to_df(df):
     """ Give dataframe a datetimeindex and add day, week and year as additional coluims to dataframe
 
     :param df: dataframe, 'Date' column required.
@@ -144,6 +144,7 @@ def add_day_week_year_to_df(df):
     df = df.set_index(pd.DatetimeIndex(df['Date']))
     df['day'] = df['Date'].dt.dayofyear
     df['week'] = [int(x / 7) for x in df['day']]
+    df['month'] = df['Date'].dt.month
     df['year'] = df['Date'].dt.year
     return df
 

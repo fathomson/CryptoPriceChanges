@@ -79,11 +79,11 @@ def prepare_crypto_parsing(crypto):
 
     # when crypto file does not exist download it
     if not os.path.isfile(fileout):
-        get_and_save_crypto_data(crypto)
+        get_and_save_crypto_data(crypto, fileout)
 
     # when old crypto file download it
     if not helpers.is_modified_today(fileout):
-        get_and_save_crypto_data(crypto)
+        get_and_save_crypto_data(crypto, fileout)
 
     print('Got {} it took {:0.2f} seconds'.format(crypto, (time.time() - parse_start_time)))
 
